@@ -5,3 +5,7 @@ as well as social and economic contextual data. To do this, this spreadsheet cro
 and uses the FCC's scoring methodology to weigh them to provide an evaluation of the most vulnerable communities in the country.'''(Data.Gov, 2021)
 Dataset Name: COVID-19 Community Vulnerability Crosswalk - Rank Ordered by Score
 72836 obs. of 19 variables
+
+27/11/22: tried again to import this Json file to Mongodb, but still shows too big to import.
+tried as well through python to load this Json to Mongodb,  but the oringal Json file is missing some: Expecting property name enclosed in double quotes: line 2 column 1 (char 2)
+so, i had to give up using this Json file, but to apply wiht CSV file for it
