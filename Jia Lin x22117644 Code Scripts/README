@@ -1,0 +1,10 @@
+File Name List:
+1.	DBAP_CA2_teamC_JiaLin_Extract_Transform_1_Global_Data.ipynb
+2.	DBAP_CA2_teamC_JiaLin_Extract_Transform_2_US_Data.ipynb
+3.	DBAP_CA2_teamC_JiaLin_Extract_Transform_3_US_by_State.ipynb
+4.	DBAP_CA2_teamC_JiaLin_Load_PostgreSQL_Visualisation_Combination.ipynb
+
+Please open code files with Jupyter Notebook.
+
+In order to make the execution time shorter, the author modified the ``iopub rate'' with terminal command:
+jupyter notebook --NotebookApp.iopub_data_rate_limit=1.0e10 
