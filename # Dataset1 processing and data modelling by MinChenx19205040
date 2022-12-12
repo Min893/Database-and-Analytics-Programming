@@ -1,0 +1,175 @@
+#dataset1 processing
+import json as simplejson
+import pymongo
+import json
+from pymongo import MongoClient
+# Fectch data from MongoDB
+client = pymongo.MongoClient("mongodb://localhost:27017")
+
+# Database Name
+db = client["ca"]
+
+# Collection Name
+col = db["spring"]
+
+x = col.find()
+for data in x:
+    print(data)
+ # Store this data to dataframe
+import pandas as pd
+x = col.find()
+df=pd.DataFrame(x)
+df.head()
+df.columns
+# rename specific columns
+df.rename(columns = {'Hardest Hit Area (HHA)': 'HHA',
+                    'HHA Score': 'HHA-score',
+                    'Total Score':'T-score', 'Max Possible Score':'MP-score', 
+                    'Low Income Area (LIA) County SAIPE - (Poverty Percentage)': 'LIACS-pvty',
+                    'Low Income Area (LIA) County SAIPE- Score': 'LIACS-score',
+                    'Low Income Area (LIA) Census Tract (Poverty Percentage)': 'LIACT-pvty',
+                    'Low Income Area (LIA) Census Tract - Score': 'LIACT-score',
+                    'Tribal Community\n(1 if yes)': 'TC',
+                    'Tribal Community\nScore (Geographic Only)': 'TC-score'
+                    }, inplace = True)
+df.info()
+#subtract new dataframe from df for decision tree ananlysis
+data = pd.DataFrame(data=df, columns=['HHA',
+ 'T-score',
+ 'MP-score',
+ 'HHA-score',
+ 'LIACS-pvty',
+ 'LIACS-score',
+ 'LIACT-pvty',
+ 'LIACT-score',
+ 'TC-score',
+ 'Rural',
+ 'Rural - Score'])
+data.info()
+data.columns
+#set the datatypes in each column into numeric
+data["T-score"] = pd.to_numeric(data["T-score"], errors='coerce')
+data["MP-score"] = pd.to_numeric(data["MP-score"])
+data["HHA-score"] = pd.to_numeric(data["HHA-score"])
+data["LIACS-pvty"] = pd.to_numeric(data["LIACS-pvty"])
+data["LIACS-score"] = pd.to_numeric(data["LIACS-score"])
+data["LIACT-pvty"] = pd.to_numeric(data["LIACT-pvty"])
+data["LIACT-score"] = pd.to_numeric(data["LIACT-score"])
+data["TC-score"] = pd.to_numeric(data["TC-score"], errors='coerce')
+data["Rural"] = pd.to_numeric(data["Rural"])
+data["Rural - Score"] = pd.to_numeric(data["Rural - Score"])
+
+data.info()
+import matplotlib.pyplot as plt
+data.plot(kind='hist')
+# store data to csv for tree analysis in new windowm as jupyter capcapcity
+
+data.to_csv('tree.csv', index=False)
+#View the statistical description of the data frame
+data.describe()
+#View the statistical description of the data frame
+data.describe()
+# set HHA status into numbers focusing on 'SustaninedHotspot' and 'ModerateBurden'
+data = data.replace(['SustainedHotspot', 'ModerateBurden'], ['1', '0'])
+data.head()
+# change HHA data type to numneric
+data["HHA"] = pd.to_numeric(data["HHA"],errors='coerce')
+data.info()
+#find NA data and replace with 0
+data.replace(np.nan,0)
+data.fillna(-99999, inplace=True)
+
+
+##dataset1 modelling
+# Load libraries
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier # Import Decision Tree Classifier
+from sklearn.model_selection import train_test_split # Import train_test_split function
+from sklearn import metrics #Import scikit-learn metrics module for accuracy calculation
+#split dataset in features and target variable
+feature_cols = ['T-score', 'MP-score', 'HHA-score', 'LIACS-pvty',
+       'LIACS-score', 'LIACT-pvty', 'LIACT-score', 'TC-score', 'Rural',
+       'Rural - Score']
+X = data[feature_cols] # Features
+y = data.HHA # Target variable
+# Split dataset into training set and test set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1) # 70% training and 30% test
+
+# Create Decision Tree classifer object
+clf = DecisionTreeClassifier()
+
+# Train Decision Tree Classifer
+clf = clf.fit(X_train,y_train)
+
+#Predict the response for test dataset
+y_pred = clf.predict(X_test)
+# Model Accuracy, how often is the classifier correct? evaluate the model
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+
+#Visualizing Decision Trees
+from sklearn.tree import export_graphviz
+import graphviz
+from six import StringIO  
+from IPython.display import Image  
+import pydotplus
+
+#Visualizing the tree, set max_depth=8
+dot_data = StringIO()
+export_graphviz(clf, out_file=dot_data,max_depth=8,
+                filled=True, rounded=True,
+                special_characters=True,feature_names = feature_cols,class_names=X.columns.tolist())
+
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue())  
+graph.write_png('diabetes.png')
+Image(graph.create_png())
+
+# other option to Create Decision Tree classifer object
+clf = DecisionTreeClassifier(criterion="entropy", max_depth=5)
+
+# Train Decision Tree Classifer
+clf = clf.fit(X_train,y_train)
+
+#Predict the response for test dataset
+y_pred = clf.predict(X_test)
+
+# Model Accuracy, how often is the classifier correct?
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+
+from six import StringIO  
+from IPython.display import Image  
+from sklearn.tree import export_graphviz
+import pydotplus
+dot_data = StringIO()
+export_graphviz(clf, out_file=dot_data,max_depth=7,
+                filled=True, rounded=True,
+                special_characters=True, feature_names = feature_cols,class_names=X.columns.tolist())
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue())  
+graph.write_png('diabetes.png')
+Image(graph.create_png())
+
+from matplotlib import pyplot as plt
+from sklearn import datasets
+from sklearn.tree import DecisionTreeClassifier 
+from sklearn import tree
+
+fig = plt.figure(figsize=(25,20))
+_ = tree.plot_tree(clf, 
+                   feature_names=feature_cols,  
+                   class_names=X.columns.tolist(),
+                   filled=True)
+
+dot_data = tree.export_graphviz(clf, out_file=None, rounded=True,
+                                feature_names=feature_cols, class_names=X.columns.tolist(), 
+                                filled=True)
+graph = graphviz.Source(dot_data, format="png")
+graph
+
+# Save figure to png file
+fig.savefig("decistion_tree.png")
+
+Print text representation
+text_representation = tree.export_text(clf)
+print(text_representation)
+# Save it to file
+with open("decistion_tree.log", "w") as fout:
+    fout.write(text_representation)
